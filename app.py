@@ -5,11 +5,24 @@ import streamlit as st
 
 DOSSIER = Path(__file__).parent / "donnees"
 
+@st.cache_data
+def lire_donnees_propres():
+    return pd.read_csv(DOSSIER / "consommation_propre.csv")
+
 st.set_page_config(page_title="L'électricité dans 12 quartiers", page_icon="⚡", layout="wide")
 
 st.title("L'électricité dans 12 quartiers")
 st.caption("Relevés mensuels de janvier 2024 à décembre 2025. Données fictives.")
 
-brut = pd.read_csv(DOSSIER / "consommation_brut.csv")
-st.write(f"Le fichier brut compte {len(brut)} lignes.")
-st.dataframe(brut.head(10), hide_index=True)
+donnees_propres = lire_donnees_propres()
+
+st.markdown(
+    "Ce tableau de bord regroupe 279 relevés mensuels de consommation électrique "
+    "répartis sur 12 quartiers de Port-au-Prince, Delmas, Pétion-Ville et Cap-Haïtien."
+)
+st.markdown(
+    "La question posée : la consommation dépend-elle de la température ou des heures de courant ?"
+)
+
+st.write(f"Nombre de lignes dans le fichier propre : {len(donnees_propres)}")
+st.dataframe(donnees_propres.head(10), hide_index=True)
