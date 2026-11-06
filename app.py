@@ -24,5 +24,19 @@ st.markdown(
     "La question posée : la consommation dépend-elle de la température ou des heures de courant ?"
 )
 
-st.write(f"Nombre de lignes dans le fichier propre : {len(donnees_propres)}")
-st.dataframe(donnees_propres.head(10), hide_index=True)
+# --- Filtres ---
+liste_communes = sorted(donnees_propres["commune"].unique())
+selection_communes = st.sidebar.multiselect(
+"Communes", liste_communes, default=liste_communes
+)
+annee_selectionnee = st.sidebar.selectbox("Année", [2025, 2024])
+
+if not selection_communes:
+    st.warning("Aucune commune sélectionnée : choisissez-en au moins une à gauche.")
+    st.stop()
+
+resultat = donnees_propres[donnees_propres["commune"].isin(selection_communes)]
+resultat = resultat[resultat["annee"] == annee_selectionnee]
+
+st.write(f"Nombre de lignes après filtrage : {len(resultat)}")
+st.dataframe(resultat.head(10), hide_index=True)
