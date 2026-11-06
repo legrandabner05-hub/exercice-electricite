@@ -15,6 +15,7 @@ st.title("L'électricité dans 12 quartiers")
 st.caption("Relevés mensuels de janvier 2024 à décembre 2025. Données fictives.")
 
 donnees_propres = lire_donnees_propres()
+
 st.markdown(
     "Ce tableau de bord regroupe 279 relevés mensuels de consommation électrique "
     "répartis sur 12 quartiers de Port-au-Prince, Delmas, Pétion-Ville et Cap-Haïtien."
@@ -45,18 +46,16 @@ c3.metric("Heures de courant (moy.)", f"{resultat['heures_courant'].mean():.1f} 
 
 # --- Onglets ---
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-"Quartiers", "Évolution", "Chaleur vs courant", "Coupures", "Pics"
+    "Quartiers", "Évolution", "Chaleur vs courant", "Coupures", "Pics"
 ])
 
-# 1. Consommation par type
 with tab1:
     st.subheader("kWh par abonné selon le type de quartier")
     moyennes_type = resultat.groupby("type")["kwh_par_abonne"].mean().round(1)
     st.bar_chart(moyennes_type, horizontal=True)
     st.write(f"Commercial : {moyennes_type.get('Commercial', 0):.1f} kWh/abonné, "
-        f"Résidentiel : {moyennes_type.get('Résidentiel', 0):.1f} kWh/abonné.")
+                f"Résidentiel : {moyennes_type.get('Résidentiel', 0):.1f} kWh/abonné.")
     
-# 2. Évolution par commune
 with tab2:
     st.subheader("Évolution du kWh par abonné, mois par mois et par commune")
     courbes = resultat.pivot_table(index="mois", columns="commune",
@@ -67,7 +66,6 @@ commune_top = totaux_commune.idxmax()
 st.write(f"En {annee_selectionnee}, la commune la plus consommatrice est {commune_top} "
             f"avec {totaux_commune.max():.2f} M kWh.")
 
-# 3. Chaleur ou courant
 with tab3:
     st.subheader("Le courant disponible pèse plus que la température")
     residences = resultat[resultat["type"] == "Résidentiel"]
@@ -76,9 +74,8 @@ with tab3:
 r_courant = residences["heures_courant"].corr(residences["kwh_par_abonne"])
 r_temp = residences["temperature_c"].corr(residences["kwh_par_abonne"])
 st.write(f"Résidentiel : corrélation de {r_courant:.2f} avec les heures de courant, "
-        f"{r_temp:.2f} avec la température.")
+            f"{r_temp:.2f} avec la température.")
 
-# 4. Coupures
 with tab4:
     st.subheader("Où les coupures durent-elles le plus longtemps ?")
     med_commune = resultat.groupby("commune")["heures_courant"].median().round(1)
@@ -86,11 +83,27 @@ with tab4:
     rares = resultat[resultat["heures_courant"] < 8]
     st.write(f"{len(rares)} relevé(s) sous 8 h de courant sur la période filtrée.")
 
-# 5. Pics
 with tab5:
     st.subheader("Top 5 des consommations les plus élevées")
     cinq = resultat.nlargest(5, "kwh")[["mois", "quartier", "type", "kwh"]]
     st.dataframe(cinq, hide_index=True)
     premier = cinq.iloc[0]
     st.write(f"Le pic se situe à {premier['quartier']} en {premier['mois']} "
-                f"avec {premier['kwh']:.0f} kWh.")
+            f"avec {premier['kwh']:.0f} kWh.")
+    
+# --- Conclusion ---
+st.markdown("---")
+st.subheader("Conclusion à l'attention du directeur")
+st.markdown(
+    "Dans le résidentiel, c'est le courant disponible qui fait la consommation "
+    "(corrélation 0,76), pas la chaleur (-0,15) : on consomme ce qu'on reçoit. "
+    "Cap-Haïtien combine la plus forte hausse (+22,5 % sur l'année) et les coupures "
+    "les plus longues (10,0 heures de médiane). Attention : une corrélation n'est pas "
+    "une cause — il faudrait des données individuelles par abonné et des périodes sans "
+    "coupure pour isoler l'effet de la température."
+)
+
+# --- Données filtrées ---
+with st.expander("Afficher le détail des données filtrées"):
+    st.dataframe(resultat, hide_index=True)
+    st.caption(f"{len(resultat)} lignes sur {len(donnees_propres)} au total.")
