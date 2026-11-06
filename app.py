@@ -38,5 +38,15 @@ if not selection_communes:
 resultat = donnees_propres[donnees_propres["commune"].isin(selection_communes)]
 resultat = resultat[resultat["annee"] == annee_selectionnee]
 
-st.write(f"Nombre de lignes après filtrage : {len(resultat)}")
+# --- Indicateurs ---
+c1, c2, c3 = st.columns(3)
+
+total_mwh = resultat["kwh"].sum() / 1_000_000
+moyenne_par_abonne = resultat["kwh_par_abonne"].mean()
+moyenne_heures = resultat["heures_courant"].mean()
+
+c1.metric("Consommation totale", f"{total_mwh:.2f} M kWh")
+c2.metric("kWh par abonné", f"{moyenne_par_abonne:.1f}")
+c3.metric("Heures de courant (moy.)", f"{moyenne_heures:.1f} h")
+
 st.dataframe(resultat.head(10), hide_index=True)
